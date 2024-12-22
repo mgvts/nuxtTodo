@@ -11,7 +11,9 @@ export const useNotesStore = defineStore('notes', {
             return this.notes[id] || null
         },
         loadAll(): NoteMap {
-            this.notes = JSON.parse(localStorage.getItem('notes') || '{}')
+            if (localStorage) {
+                this.notes = JSON.parse(localStorage.getItem('notes') || '{}')
+            }
             return this.notes
         },
         addNote(note: Note) {
@@ -32,7 +34,9 @@ export const useNotesStore = defineStore('notes', {
             this.saveNotes()
         },
         saveNotes() {
-            localStorage.setItem('notes', JSON.stringify(this.notes))
+            if (localStorage) {
+                localStorage.setItem('notes', JSON.stringify(this.notes))
+            }
         },
     },
 });
