@@ -2,11 +2,16 @@
 import {defineComponent} from 'vue'
 import type {Note} from "~/types/note";
 import {NoteInline} from "#components";
+import {useDisplay} from "vuetify";
 
 export default defineComponent({
   name: "index",
   setup() {
-    return {notesStore: useNotesStore()}
+    const {smAndDown} = useDisplay()
+    return {
+      notesStore: useNotesStore(),
+      smAndDown,
+    }
   },
   components: {NoteInline},
   data() {
@@ -30,7 +35,7 @@ export default defineComponent({
         todo: []
       }
       this.notesStore.addNote(newNote)
-      this.$router.push('/edit/' + newNote.id)
+      this.$router.push('/edit/' + newNote.id + '?create')
     },
   },
   mounted() {
@@ -42,7 +47,7 @@ export default defineComponent({
 <template>
   <v-container>
     <v-row class="bg-white h-screen justify-center ma-auto pt-5">
-      <v-col>
+      <v-col :class="{'px-0': smAndDown}">
         <v-row class="justify-space-between pb-5 align-center">
           <h1>
             All notes

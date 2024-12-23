@@ -2,15 +2,21 @@
 import type {Todo, Note} from "~/types/note";
 import {DeleteBtn} from "#components";
 import ActionDialog from "~/components/ActionDialog.vue";
+import {useDisplay} from "vuetify";
 
 export default {
   name: 'EditNote',
   components: {ActionDialog, DeleteBtn},
   setup() {
-    return {notesStore: useNotesStore()}
+    const {smAndDown} = useDisplay()
+    return {
+      notesStore: useNotesStore(),
+      smAndDown,
+    }
   },
   data() {
     return {
+      creating: false,
       note: null as null | Note,
       originalNote: null as Note | null,
       isOpenDeleteDialog: false,
@@ -27,6 +33,9 @@ export default {
     saveBtnText() {
       return this.isChanged ? 'Сохранить' : 'Вернуться обратно'
     },
+    cardTitle() {
+      return this.creating ? 'Создание заметки' : 'Изменение заметки'
+    }
   },
   methods: {
     addTodo() {
@@ -65,22 +74,34 @@ export default {
     }
   },
   mounted() {
+    if (window.location.search.substring(1)) {
+      this.creating = true
+    }
+    console.log();
     this.loadNote();
   }
 }
 </script>
 
 <template>
-  <v-container class="pt-15" fluid>
-    <div v-if="!note">
-      Заметка не найдена
+  <v-container class="pa-0 pt-15" fluid>
+    <div v-if="!note" class="text-center px-1">
+      <div class="pb-3">
+        Заметка не найдена
+      </div>
+      <v-btn
+          :class="{'w-100' : smAndDown}"
+          variant="outlined"
+          @click="$router.push('/')"
+          text="Вернуться назад"
+      />
     </div>
-    <v-card v-else class="mx-auto w-75">
+    <v-card v-else class="mx-auto" :class="smAndDown ? 'w-100' : 'w-75'">
       <v-card-item v-if="note">
         <div class="d-flex flex-row justify-space-between align-center">
-          <h1 class="text-h5 text-md-h4">Изменение заметки</h1>
+          <h1 class="text-h5 text-md-h4">{{ cardTitle }}</h1>
 
-          <delete-btn :note="note"/>
+          <delete-btn :note="note" @delete="_ => $router.push('/')"/>
         </div>
         <v-card-item>
           <v-text-field
@@ -92,8 +113,11 @@ export default {
         </v-card-item>
 
 
-        <v-card-item class="align-center pa-3">
-          <div class="d-flex justify-space-between align-center px-4 py-2">
+        <v-card-item class="align-center" :class="smAndDown ? 'pa-0' : 'pa-3'">
+          <div
+              class="d-flex justify-space-between align-center py-2"
+              :class="smAndDown ? 'pa-0': 'px-4'"
+          >
             <div>Задачи:</div>
             <v-btn @click="addTodo" icon="mdi-plus" color="primary"/>
           </div>
@@ -102,13 +126,14 @@ export default {
               <v-list-item
                   v-for="(todo, index) in note.todo"
                   :key="todo.id"
-                  class="d-grid ga-5"
+                  class="d-grid ga-5 px-0"
               >
                 <template v-slot:prepend>
                   <v-checkbox v-model="todo.solve" hide-details/>
                 </template>
                 <template v-slot:title>
                   <v-text-field
+                      autofocus
                       hide-details
                       dense
                       solo
@@ -137,24 +162,30 @@ export default {
           </v-list>
         </v-card-item>
 
-
-        <v-card-actions class="justify-end mt-4">
-          <v-btn variant="outlined" class="me-2" @click="cancelChanges()" :disabled="!isChanged">
-            Отменить изменения
-          </v-btn>
-          <v-btn variant="tonal" @click="saveNote">
-            {{saveBtnText}}
-          </v-btn>
+        <v-card-actions class="mt-4" :class="smAndDown ? 'w-100 flex-column justify-center' : 'justify-space-between'">
+          <v-btn
+              :class="{'w-100' : smAndDown}"
+              variant="outlined"
+              @click="cancelChanges()"
+              :disabled="!isChanged"
+              text="Отменить изменения"
+          />
+          <v-btn
+              :class="{'w-100' : smAndDown}"
+              variant="tonal"
+              @click="saveNote"
+              :text="saveBtnText"
+          />
         </v-card-actions>
       </v-card-item>
     </v-card>
 
     <action-dialog
-      title="Вы точно хотите отменить изменения?"
-      confirm-title-btn="Отменить"
-      back-title-btn="Оставить"
-      @confirm="addTodo"
-      @back="cancelChanges"
+        title="Вы точно хотите отменить изменения?"
+        confirm-title-btn="Отменить"
+        back-title-btn="Оставить"
+        @confirm="addTodo"
+        @back="cancelChanges"
     />
   </v-container>
 </template>
